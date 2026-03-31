@@ -33,9 +33,10 @@ export function formatDayHeader(date) {
 }
 
 export function parseEventTime(isoStr) {
-  // Handle both "Z" suffix and bare ISO strings
-  return parseISO(isoStr.replace('Z', ''));
+  return parseISO(isoStr);
 }
+
+export const LOCAL_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 export const HOUR_START = 7;
 export const HOUR_END = 21;

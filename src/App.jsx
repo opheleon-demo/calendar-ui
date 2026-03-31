@@ -3,7 +3,7 @@ import CalendarHeader from './components/CalendarHeader';
 import WeekGrid from './components/WeekGrid';
 import EventModal from './components/EventModal';
 import RecurrencePrompt from './components/RecurrencePrompt';
-import { getWeekStart, nextWeek, prevWeek, formatDate } from './utils/dates';
+import { getWeekStart, nextWeek, prevWeek, formatDate, LOCAL_TZ } from './utils/dates';
 import * as api from './api';
 import './App.css';
 
@@ -67,7 +67,7 @@ export default function App() {
         title: data.title,
         start: data.start,
         end: data.end,
-        timezone: 'America/New_York',
+        timezone: LOCAL_TZ,
       };
       if (data.recurrence) body.recurrence = data.recurrence;
       const result = await api.createEvent(body);

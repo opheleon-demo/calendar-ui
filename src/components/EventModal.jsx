@@ -25,8 +25,8 @@ export default function EventModal({ event, slotTime, onSave, onDelete, onClose 
   useEffect(() => {
     if (event) {
       setTitle(event.title);
-      const s = new Date(event.start.replace('Z', ''));
-      const e = new Date(event.end.replace('Z', ''));
+      const s = new Date(event.start);
+      const e = new Date(event.end);
       setStartDate(formatDateInput(s));
       setStartTime(formatTimeInput(s));
       setEndTime(formatTimeInput(e));

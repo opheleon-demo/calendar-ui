@@ -1,6 +1,8 @@
+import { LOCAL_TZ } from './utils/dates';
+
 const BASE = 'http://localhost:8000';
 
-export async function fetchEvents(start, end, tz = 'America/New_York') {
+export async function fetchEvents(start, end, tz = LOCAL_TZ) {
   const res = await fetch(
     `${BASE}/events?start=${start}&end=${end}&tz=${encodeURIComponent(tz)}`
   );
