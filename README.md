@@ -14,6 +14,8 @@ Requires the backend running on http://localhost:8000.
 
 ## Features
 
+- Register, sign in, and sign out; calendar requests carry the signed-in person's token
+- Signing out (or the token expiring, or a 401 from the API) clears all calendar data from the screen; other open tabs follow via the `storage` event
 - Weekly calendar view (Mon-Sun, 7am-9pm)
 - Click empty slot to create event (with optional recurrence)
 - Click event to edit/delete

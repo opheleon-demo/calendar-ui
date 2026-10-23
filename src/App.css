@@ -281,3 +281,36 @@ body {
   display: flex;
   flex-direction: column;
 }
+
+/* ── Auth ────────────────────────────────────────────────── */
+.header-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+.header-username { font-size: 14px; color: var(--gray-500); }
+
+.auth-page {
+  display: flex;
+  justify-content: center;
+  padding-top: 15vh;
+}
+.auth-card { box-shadow: var(--shadow); }
+.auth-card input[aria-invalid="true"] { border-color: #ef4444; }
+
+.field-error {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 400;
+  color: #dc2626;
+}
+.form-error {
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 13px;
+}
+.btn:disabled { opacity: 0.6; cursor: default; }

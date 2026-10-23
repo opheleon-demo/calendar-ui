@@ -1,13 +1,24 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useSyncExternalStore } from 'react';
 import CalendarHeader from './components/CalendarHeader';
 import WeekGrid from './components/WeekGrid';
 import EventModal from './components/EventModal';
 import RecurrencePrompt from './components/RecurrencePrompt';
+import SignIn from './components/SignIn';
 import { getWeekStart, nextWeek, prevWeek, formatDate, LOCAL_TZ } from './utils/dates';
 import * as api from './api';
+import { getSession, subscribe, clearSession } from './session';
 import './App.css';
 
 export default function App() {
+  const session = useSyncExternalStore(subscribe, getSession);
+
+  if (!session) return <SignIn />;
+  // Keyed by user so a different person signing in (here or in another tab)
+  // starts from a fresh calendar with none of the previous person's state.
+  return <Calendar key={session.userId} session={session} />;
+}
+
+function Calendar({ session }) {
   const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date()));
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -162,6 +173,8 @@ export default function App() {
         onPrev={handlePrev}
         onNext={handleNext}
         onToday={handleToday}
+        username={session.username}
+        onSignOut={clearSession}
       />
       {loading && <div className="loading-bar" />}
       <WeekGrid
