@@ -11,6 +11,7 @@ export default function App() {
   const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date()));
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   // Modal state
   const [modalEvent, setModalEvent] = useState(null);
@@ -28,7 +29,9 @@ export default function App() {
       const data = await api.fetchEvents(start, formatDate(end));
       setEvents(data);
     } catch (e) {
-      console.error('Failed to load events:', e);
+      // Never keep showing events the server would no longer return
+      setEvents([]);
+      setError(e.message);
     }
     setLoading(false);
   }, [weekStart]);
@@ -54,15 +57,33 @@ export default function App() {
     setModalSlot(null);
   }
 
+  // Runs a change against the API, then reloads so the calendar shows what
+  // was actually saved. Returns false (and shows the error) if it failed.
+  async function mutate(action) {
+    setError(null);
+    try {
+      await action();
+      return true;
+    } catch (e) {
+      setError(e.message);
+      return false;
+    } finally {
+      loadEvents();
+    }
+  }
+
   async function handleSave(data) {
-    if (modalEvent) {
-      if (modalEvent.is_recurring) {
-        setPrompt({ action: 'edit', event: modalEvent, payload: data });
-        closeModal();
+    if (modalEvent?.is_recurring) {
+      setPrompt({ action: 'edit', event: modalEvent, payload: data });
+      closeModal();
+      return;
+    }
+    // On failure the modal stays open so nothing typed is lost
+    const ok = await mutate(async () => {
+      if (modalEvent) {
+        await api.updateEvent(modalEvent.id, data);
         return;
       }
-      await api.updateEvent(modalEvent.id, data);
-    } else {
       const body = {
         title: data.title,
         start: data.start,
@@ -74,9 +95,8 @@ export default function App() {
       if (result.conflicts && result.conflicts.length > 0) {
         alert(`Note: This event conflicts with ${result.conflicts.length} existing event(s).`);
       }
-    }
-    closeModal();
-    loadEvents();
+    });
+    if (ok) closeModal();
   }
 
   function handleDelete(event) {
@@ -108,32 +128,33 @@ export default function App() {
     if (event.is_recurring) {
       setPrompt({ action: 'move', event, payload });
     } else {
-      api.updateEvent(event.id, payload).then(loadEvents);
+      mutate(() => api.updateEvent(event.id, payload));
     }
   }
 
-  async function handlePromptSelect(scope) {
+  function handlePromptSelect(scope) {
     const { action, event, payload } = prompt;
     setPrompt(null);
 
     if (action === 'delete') {
-      await performDelete(event, scope);
+      performDelete(event, scope);
     } else {
-      await performEdit(event, payload, scope);
+      mutate(() => performEdit(event, payload, scope));
     }
-    loadEvents();
   }
 
-  async function performDelete(event, scope) {
-    if (scope === 'this') {
-      await api.deleteOccurrence(event.id, event.original_date);
-    } else if (scope === 'future') {
-      await api.updateSeries(event.id, { from_date: event.original_date, title: event.title });
-      // After splitting, delete the new series
-    } else {
-      await api.deleteEvent(event.id);
-    }
-    loadEvents();
+  function performDelete(event, scope) {
+    return mutate(async () => {
+      if (scope === 'this') {
+        await api.deleteOccurrence(event.id, event.original_date);
+      } else if (scope === 'future') {
+        // Split the series at this occurrence, then delete the new tail series
+        const tail = await api.updateSeries(event.id, { from_date: event.original_date, title: event.title });
+        await api.deleteEvent(tail.id);
+      } else {
+        await api.deleteEvent(event.id);
+      }
+    });
   }
 
   async function performEdit(event, payload, scope) {
@@ -164,6 +185,14 @@ export default function App() {
         onToday={handleToday}
       />
       {loading && <div className="loading-bar" />}
+      {error && (
+        <div className="error-banner" role="alert">
+          <span>{error}</span>
+          <button type="button" className="error-dismiss" onClick={() => setError(null)} aria-label="Dismiss">
+            &times;
+          </button>
+        </div>
+      )}
       <WeekGrid
         weekStart={weekStart}
         events={events}

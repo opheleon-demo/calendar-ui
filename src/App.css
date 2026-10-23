@@ -80,6 +80,29 @@ body {
 }
 @keyframes loading { 0%, 100% { width: 0; } 50% { width: 100%; } }
 
+/* ── Errors ──────────────────────────────────────────────── */
+.error-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--radius);
+  color: #b91c1c;
+  font-size: 14px;
+}
+.error-dismiss {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
 /* ── Week Grid ───────────────────────────────────────────── */
 .week-grid {
   border: 1px solid var(--gray-200);
