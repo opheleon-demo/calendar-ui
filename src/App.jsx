@@ -3,14 +3,72 @@ import CalendarHeader from './components/CalendarHeader';
 import WeekGrid from './components/WeekGrid';
 import EventModal from './components/EventModal';
 import RecurrencePrompt from './components/RecurrencePrompt';
+import SignIn from './components/SignIn';
 import { getWeekStart, nextWeek, prevWeek, formatDate, LOCAL_TZ } from './utils/dates';
 import * as api from './api';
+import { getSession, clearSession, subscribe } from './session';
 import './App.css';
 
+function tokenExpiry(token) {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    return typeof payload.exp === 'number' ? payload.exp * 1000 : null;
+  } catch {
+    return null;
+  }
+}
+
 export default function App() {
+  const [session, setSessionState] = useState(getSession);
+
+  useEffect(() => {
+    // Sign-in, sign-out, and rejected tokens in this or any other tab.
+    const unsubscribe = subscribe(() => setSessionState(getSession()));
+
+    // A page restored from the back/forward cache keeps its old screen; re-check
+    // the stored session so a signed-out page never shows the previous events.
+    function handlePageShow(e) {
+      if (e.persisted) setSessionState(getSession());
+    }
+    window.addEventListener('pageshow', handlePageShow);
+    return () => {
+      unsubscribe();
+      window.removeEventListener('pageshow', handlePageShow);
+    };
+  }, []);
+
+  // Drop the session when the token expires, even if no request is made.
+  useEffect(() => {
+    if (!session) return;
+    const expiresAt = tokenExpiry(session.token);
+    if (!expiresAt) return;
+    const timer = setTimeout(() => setSessionState(getSession()), Math.max(0, expiresAt - Date.now()));
+    return () => clearTimeout(timer);
+  }, [session]);
+
+  function handleSignOut() {
+    clearSession();
+    setSessionState(null);
+  }
+
+  if (!session) return <SignIn />;
+
+  // Keyed by identity so a different person never inherits the previous
+  // person's events, modal, or prompt state.
+  return (
+    <Calendar
+      key={`${session.userId}:${session.token}`}
+      username={session.username}
+      onSignOut={handleSignOut}
+    />
+  );
+}
+
+function Calendar({ username, onSignOut }) {
   const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date()));
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   // Modal state
   const [modalEvent, setModalEvent] = useState(null);
@@ -27,11 +85,26 @@ export default function App() {
       end.setDate(end.getDate() + 7);
       const data = await api.fetchEvents(start, formatDate(end));
       setEvents(data);
+      setError(null);
     } catch (e) {
-      console.error('Failed to load events:', e);
+      // A rejected token clears the session and App returns to sign-in.
+      if (e instanceof api.AuthError) return;
+      setError('Could not load events. Please try again.');
     }
     setLoading(false);
   }, [weekStart]);
+
+  // Run a change against the API; on failure show the error and reload so the
+  // calendar reflects what is actually saved.
+  async function mutate(fn) {
+    try {
+      return await fn();
+    } catch (e) {
+      if (e instanceof api.AuthError) return;
+      setError(e.message || 'Could not save your change.');
+      return null;
+    }
+  }
 
   useEffect(() => { loadEvents(); }, [loadEvents]);
 
@@ -61,7 +134,7 @@ export default function App() {
         closeModal();
         return;
       }
-      await api.updateEvent(modalEvent.id, data);
+      await mutate(() => api.updateEvent(modalEvent.id, data));
     } else {
       const body = {
         title: data.title,
@@ -70,8 +143,8 @@ export default function App() {
         timezone: LOCAL_TZ,
       };
       if (data.recurrence) body.recurrence = data.recurrence;
-      const result = await api.createEvent(body);
-      if (result.conflicts && result.conflicts.length > 0) {
+      const result = await mutate(() => api.createEvent(body));
+      if (result?.conflicts && result.conflicts.length > 0) {
         alert(`Note: This event conflicts with ${result.conflicts.length} existing event(s).`);
       }
     }
@@ -108,7 +181,7 @@ export default function App() {
     if (event.is_recurring) {
       setPrompt({ action: 'move', event, payload });
     } else {
-      api.updateEvent(event.id, payload).then(loadEvents);
+      mutate(() => api.updateEvent(event.id, payload)).then(loadEvents);
     }
   }
 
@@ -126,23 +199,23 @@ export default function App() {
 
   async function performDelete(event, scope) {
     if (scope === 'this') {
-      await api.deleteOccurrence(event.id, event.original_date);
+      await mutate(() => api.deleteOccurrence(event.id, event.original_date));
     } else if (scope === 'future') {
-      await api.updateSeries(event.id, { from_date: event.original_date, title: event.title });
+      await mutate(() => api.updateSeries(event.id, { from_date: event.original_date, title: event.title }));
       // After splitting, delete the new series
     } else {
-      await api.deleteEvent(event.id);
+      await mutate(() => api.deleteEvent(event.id));
     }
     loadEvents();
   }
 
   async function performEdit(event, payload, scope) {
     if (scope === 'this') {
-      await api.updateOccurrence(event.id, event.original_date, payload);
+      await mutate(() => api.updateOccurrence(event.id, event.original_date, payload));
     } else if (scope === 'future') {
-      await api.updateSeries(event.id, { ...payload, from_date: event.original_date });
+      await mutate(() => api.updateSeries(event.id, { ...payload, from_date: event.original_date }));
     } else {
-      await api.updateEvent(event.id, payload);
+      await mutate(() => api.updateEvent(event.id, payload));
     }
   }
 
@@ -162,8 +235,16 @@ export default function App() {
         onPrev={handlePrev}
         onNext={handleNext}
         onToday={handleToday}
+        username={username}
+        onSignOut={onSignOut}
       />
       {loading && <div className="loading-bar" />}
+      {error && (
+        <div className="error-banner" role="alert">
+          {error}
+          <button className="btn-link" onClick={() => setError(null)}>Dismiss</button>
+        </div>
+      )}
       <WeekGrid
         weekStart={weekStart}
         events={events}
