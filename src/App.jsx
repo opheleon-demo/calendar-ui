@@ -1,16 +1,42 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useSyncExternalStore } from 'react';
 import CalendarHeader from './components/CalendarHeader';
 import WeekGrid from './components/WeekGrid';
 import EventModal from './components/EventModal';
 import RecurrencePrompt from './components/RecurrencePrompt';
+import SignIn from './components/SignIn';
 import { getWeekStart, nextWeek, prevWeek, formatDate, LOCAL_TZ } from './utils/dates';
 import * as api from './api';
+import { getToken, clearToken, subscribe } from './auth';
 import './App.css';
 
 export default function App() {
+  const token = useSyncExternalStore(subscribe, getToken);
+  const [hadSession, setHadSession] = useState(false);
+  const [signedOut, setSignedOut] = useState(false);
+
+  if (token && !hadSession) setHadSession(true);
+
+  if (!token) {
+    const notice = hadSession && !signedOut
+      ? 'Your session has ended. Please sign in again.'
+      : null;
+    return <SignIn notice={notice} />;
+  }
+
+  function handleSignOut() {
+    setSignedOut(true);
+    clearToken();
+  }
+
+  // Keyed by token so a new session always starts with empty calendar state.
+  return <Calendar key={token} onSignOut={handleSignOut} />;
+}
+
+function Calendar({ onSignOut }) {
   const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date()));
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   // Modal state
   const [modalEvent, setModalEvent] = useState(null);
@@ -28,7 +54,8 @@ export default function App() {
       const data = await api.fetchEvents(start, formatDate(end));
       setEvents(data);
     } catch (e) {
-      console.error('Failed to load events:', e);
+      setEvents([]);
+      setError(e.message);
     }
     setLoading(false);
   }, [weekStart]);
@@ -54,15 +81,32 @@ export default function App() {
     setModalSlot(null);
   }
 
+  // Runs a change against the API, surfaces any failure, and reloads so the
+  // calendar always reflects the saved state.
+  async function runChange(change) {
+    setError(null);
+    try {
+      await change();
+    } catch (e) {
+      if (e.status === 401) return;
+      setError(e.message);
+    }
+    loadEvents();
+  }
+
   async function handleSave(data) {
-    if (modalEvent) {
-      if (modalEvent.is_recurring) {
-        setPrompt({ action: 'edit', event: modalEvent, payload: data });
-        closeModal();
+    if (modalEvent?.is_recurring) {
+      setPrompt({ action: 'edit', event: modalEvent, payload: data });
+      closeModal();
+      return;
+    }
+    const editing = modalEvent;
+    closeModal();
+    await runChange(async () => {
+      if (editing) {
+        await api.updateEvent(editing.id, data);
         return;
       }
-      await api.updateEvent(modalEvent.id, data);
-    } else {
       const body = {
         title: data.title,
         start: data.start,
@@ -74,9 +118,7 @@ export default function App() {
       if (result.conflicts && result.conflicts.length > 0) {
         alert(`Note: This event conflicts with ${result.conflicts.length} existing event(s).`);
       }
-    }
-    closeModal();
-    loadEvents();
+    });
   }
 
   function handleDelete(event) {
@@ -84,7 +126,7 @@ export default function App() {
     if (event.is_recurring) {
       setPrompt({ action: 'delete', event, payload: null });
     } else {
-      performDelete(event, 'all');
+      performDeleteNow(event, 'all');
     }
   }
 
@@ -108,7 +150,7 @@ export default function App() {
     if (event.is_recurring) {
       setPrompt({ action: 'move', event, payload });
     } else {
-      api.updateEvent(event.id, payload).then(loadEvents);
+      runChange(() => api.updateEvent(event.id, payload));
     }
   }
 
@@ -116,12 +158,13 @@ export default function App() {
     const { action, event, payload } = prompt;
     setPrompt(null);
 
-    if (action === 'delete') {
-      await performDelete(event, scope);
-    } else {
-      await performEdit(event, payload, scope);
-    }
-    loadEvents();
+    await runChange(() => (
+      action === 'delete' ? performDelete(event, scope) : performEdit(event, payload, scope)
+    ));
+  }
+
+  function performDeleteNow(event, scope) {
+    return runChange(() => performDelete(event, scope));
   }
 
   async function performDelete(event, scope) {
@@ -133,7 +176,6 @@ export default function App() {
     } else {
       await api.deleteEvent(event.id);
     }
-    loadEvents();
   }
 
   async function performEdit(event, payload, scope) {
@@ -162,8 +204,15 @@ export default function App() {
         onPrev={handlePrev}
         onNext={handleNext}
         onToday={handleToday}
+        onSignOut={onSignOut}
       />
       {loading && <div className="loading-bar" />}
+      {error && (
+        <div className="error-banner" role="alert">
+          {error}
+          <button className="btn" onClick={() => setError(null)}>Dismiss</button>
+        </div>
+      )}
       <WeekGrid
         weekStart={weekStart}
         events={events}

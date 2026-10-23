@@ -1,6 +1,6 @@
 import { format } from 'date-fns';
 
-export default function CalendarHeader({ weekStart, onPrev, onNext, onToday }) {
+export default function CalendarHeader({ weekStart, onPrev, onNext, onToday, onSignOut }) {
   const weekEnd = new Date(weekStart);
   weekEnd.setDate(weekEnd.getDate() + 6);
 
@@ -14,6 +14,7 @@ export default function CalendarHeader({ weekStart, onPrev, onNext, onToday }) {
       <h2 className="header-title">
         {format(weekStart, 'MMM d')} &ndash; {format(weekEnd, 'MMM d, yyyy')}
       </h2>
+      <button onClick={onSignOut} className="btn header-account">Sign out</button>
     </header>
   );
 }
