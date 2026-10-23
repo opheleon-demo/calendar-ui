@@ -14,6 +14,7 @@ Requires the backend running on http://localhost:8000.
 
 ## Features
 
+- Register and sign in; the session survives reloads until the token expires
 - Weekly calendar view (Mon-Sun, 7am-9pm)
 - Click empty slot to create event (with optional recurrence)
 - Click event to edit/delete
