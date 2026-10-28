@@ -71,13 +71,16 @@ export async function fetchEvents(start, end, tz = LOCAL_TZ) {
 
 export async function createEvent(data) {
   const res = await request('/events', jsonBody('POST', data));
+  if (!res.ok) throw new Error(await errorMessage(res, 'The event could not be saved'));
   return res.json();
 }
 
 export async function updateEvent(id, data) {
   const res = await request(`/events/${id}`, jsonBody('PUT', data));
+  if (!res.ok) throw new Error(await errorMessage(res, 'The event could not be saved'));
   return res.json();
 }
+
 
 export async function updateOccurrence(id, date, data) {
   const res = await request(`/events/${id}/occurrence/${date}`, jsonBody('PUT', data));
@@ -90,7 +93,8 @@ export async function updateSeries(id, data) {
 }
 
 export async function deleteEvent(id) {
-  await request(`/events/${id}`, { method: 'DELETE' });
+  const res = await request(`/events/${id}`, { method: 'DELETE' });
+  return res.json();
 }
 
 export async function deleteOccurrence(id, date) {

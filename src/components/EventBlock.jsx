@@ -33,9 +33,12 @@ export default function EventBlock({ event, dayIndex, onClick, columnWidth, offs
       draggable
       onDragStart={handleDragStart}
       onClick={(e) => { e.stopPropagation(); onClick(event); }}
-      title={`${event.title}\n${start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+      title={`${event.title}\n${start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}${event.zoom_join_url ? `\nZoom: ${event.zoom_join_url}` : ''}`}
     >
-      <span className="event-title">{event.title}</span>
+      <span className="event-title">
+        {event.zoom_join_url && <span className="zoom-badge">Zoom</span>}
+        {event.title}
+      </span>
     </div>
   );
 }

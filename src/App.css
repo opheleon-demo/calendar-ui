@@ -340,3 +340,38 @@ body {
   display: flex;
   gap: 8px;
 }
+
+.zoom-field { margin-bottom: 12px; }
+.zoom-field .notice { margin-bottom: 0; }
+
+.modal label.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+.modal label.checkbox-label input {
+  width: auto;
+  margin: 0;
+}
+
+.zoom-link {
+  font-size: 13px;
+  color: var(--gray-500);
+  margin-bottom: 12px;
+  overflow-wrap: anywhere;
+}
+.zoom-link a { color: var(--blue); }
+
+.zoom-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 0 4px;
+  margin-right: 4px;
+  border-radius: 3px;
+  background: var(--blue);
+  color: white;
+  vertical-align: 1px;
+}
