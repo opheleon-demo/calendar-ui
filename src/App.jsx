@@ -3,11 +3,13 @@ import CalendarHeader from './components/CalendarHeader';
 import WeekGrid from './components/WeekGrid';
 import EventModal from './components/EventModal';
 import RecurrencePrompt from './components/RecurrencePrompt';
+import ZoomSettings from './components/ZoomSettings';
 import { getWeekStart, nextWeek, prevWeek, formatDate, LOCAL_TZ } from './utils/dates';
 import * as api from './api';
+import { readZoomRedirect, clearZoomRedirect, RECONNECT_TEXT } from './zoom';
 import './App.css';
 
-export default function App() {
+export default function App({ onSignOut }) {
   const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date()));
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -18,6 +20,32 @@ export default function App() {
 
   // Recurrence prompt state
   const [prompt, setPrompt] = useState(null);
+
+  // Zoom connection state. Returning from Zoom's consent screen lands here with
+  // the result in the URL, so open the settings to show it.
+  const [zoomStatus, setZoomStatus] = useState(null);
+  const [zoomNotice, setZoomNotice] = useState(readZoomRedirect);
+  const [showZoomSettings, setShowZoomSettings] = useState(zoomNotice !== null);
+
+  useEffect(() => { clearZoomRedirect(); }, []);
+
+  const loadZoomStatus = useCallback(() => {
+    api.fetchZoomStatus()
+      .then(setZoomStatus)
+      .catch(e => console.error('Failed to load Zoom status:', e));
+  }, []);
+
+  useEffect(() => { loadZoomStatus(); }, [loadZoomStatus]);
+
+  function openZoomSettings() {
+    setShowZoomSettings(true);
+    loadZoomStatus();
+  }
+
+  function closeZoomSettings() {
+    setShowZoomSettings(false);
+    setZoomNotice(null);
+  }
 
   const loadEvents = useCallback(async () => {
     setLoading(true);
@@ -162,7 +190,15 @@ export default function App() {
         onPrev={handlePrev}
         onNext={handleNext}
         onToday={handleToday}
+        onOpenZoom={openZoomSettings}
+        onSignOut={onSignOut}
       />
+      {zoomStatus?.status === 'reconnect_required' && !showZoomSettings && (
+        <div className="notice notice-warning banner">
+          <span>{RECONNECT_TEXT}</span>
+          <button className="btn" onClick={openZoomSettings}>Reconnect</button>
+        </div>
+      )}
       {loading && <div className="loading-bar" />}
       <WeekGrid
         weekStart={weekStart}
@@ -178,6 +214,14 @@ export default function App() {
           onSave={handleSave}
           onDelete={handleDelete}
           onClose={closeModal}
+        />
+      )}
+      {showZoomSettings && (
+        <ZoomSettings
+          status={zoomStatus}
+          notice={zoomNotice}
+          onStatusChange={setZoomStatus}
+          onClose={closeZoomSettings}
         />
       )}
       {prompt && (
