@@ -109,7 +109,7 @@ body {
   display: grid;
   grid-template-columns: 60px repeat(7, 1fr);
   overflow-y: auto;
-  max-height: calc(100vh - 120px);
+  max-height: calc(100vh - 170px);
 }
 
 .time-gutter { background: var(--gray-50); }
@@ -281,3 +281,75 @@ body {
   display: flex;
   flex-direction: column;
 }
+
+/* ── Footer ──────────────────────────────────────────────── */
+.app-footer {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--gray-200);
+}
+
+.footer-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+.footer-link {
+  display: inline-block;
+  padding: 4px 2px;
+  font-size: 14px;
+  color: var(--blue-dark);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  border-radius: 2px;
+}
+.footer-link:hover { color: var(--blue); }
+.footer-link:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+/* ── Help Page ───────────────────────────────────────────── */
+.help-page {
+  max-width: 680px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--gray-700);
+  overflow-wrap: break-word;
+}
+
+.help-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin-bottom: 8px;
+}
+
+.help-intro { margin-bottom: 16px; }
+
+.help-section { margin-bottom: 16px; }
+
+.help-section h2 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin-bottom: 4px;
+}
+
+.help-section ul { padding-left: 20px; }
+.help-section li { margin-bottom: 4px; }
+
+.help-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 4px;
+  border-radius: 2px;
+  border-left: 3px solid;
+  vertical-align: -1px;
+}
+.help-swatch-single { background: var(--blue-light); border-left-color: var(--blue); }
+.help-swatch-recurring { background: var(--purple-light); border-left-color: var(--purple); }
+
+.help-back { margin-top: 8px; }
