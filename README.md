@@ -21,3 +21,5 @@ Requires the backend running on http://localhost:8000.
 - Recurring event edits prompt: "This event only / This and future / All events"
 - Color coding: blue = single events, purple = recurring events
 - Conflict detection alerts on creation
+- Sign in / register; the JWT is kept in `localStorage` and sent as a Bearer token on every API call
+- Zoom settings (header → **Zoom**): connect your own Zoom account, see its status, disconnect, and reconnect when Zoom access expires or is revoked
