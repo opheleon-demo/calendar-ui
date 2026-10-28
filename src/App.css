@@ -32,6 +32,61 @@ body {
   padding: 16px;
 }
 
+/* Footer stays in document flow, clear of calendar controls and dialogs. */
+.app-footer {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 16px;
+  padding-top: 8px;
+  border-top: 1px solid var(--gray-200);
+}
+
+.app-footer a, .help-page a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px;
+  color: var(--blue-dark);
+  text-underline-offset: 3px;
+  border-radius: var(--radius);
+}
+
+.app-footer a:hover, .help-page a:hover {
+  background: var(--blue-light);
+}
+
+.app-footer a:focus-visible, .help-page a:focus-visible {
+  outline: 2px solid var(--blue-dark);
+  outline-offset: 2px;
+}
+
+.help-page {
+  max-width: 680px;
+  padding: clamp(16px, 4vw, 32px);
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.help-page h1 {
+  font-size: 28px;
+  margin-bottom: 16px;
+}
+
+.help-page p, .help-page ul {
+  margin-bottom: 16px;
+}
+
+.help-page ul {
+  padding-left: 24px;
+}
+
+.help-page li + li {
+  margin-top: 8px;
+}
+
 /* ── Header ──────────────────────────────────────────────── */
 .calendar-header {
   display: flex;
