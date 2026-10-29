@@ -32,6 +32,44 @@ body {
   padding: 16px;
 }
 
+/* ── Help & Footer ───────────────────────────────────────── */
+.app-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 8px;
+  border-top: 1px solid var(--gray-200);
+}
+
+.page-link {
+  display: inline-block;
+  padding: 10px 4px;
+  color: var(--blue-dark);
+  line-height: 1.5;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  border-radius: var(--radius);
+}
+
+.page-link:hover { color: var(--gray-900); }
+.page-link:focus-visible {
+  outline: 3px solid var(--blue-dark);
+  outline-offset: 3px;
+}
+
+.help-page {
+  max-width: 65ch;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.help-page h1 { font-size: 28px; }
+.help-page p, .help-page ul { margin-top: 16px; }
+.help-page ul { padding-left: 24px; }
+.help-page li + li { margin-top: 8px; }
+.help-page > .page-link { margin-top: 16px; }
+
 /* ── Header ──────────────────────────────────────────────── */
 .calendar-header {
   display: flex;
