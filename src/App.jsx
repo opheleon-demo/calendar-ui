@@ -3,11 +3,12 @@ import CalendarHeader from './components/CalendarHeader';
 import WeekGrid from './components/WeekGrid';
 import EventModal from './components/EventModal';
 import RecurrencePrompt from './components/RecurrencePrompt';
+import HelpPage from './components/HelpPage';
 import { getWeekStart, nextWeek, prevWeek, formatDate, LOCAL_TZ } from './utils/dates';
 import * as api from './api';
 import './App.css';
 
-export default function App() {
+function Calendar() {
   const [weekStart, setWeekStart] = useState(() => getWeekStart(new Date()));
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -156,7 +157,7 @@ export default function App() {
   }
 
   return (
-    <div className="app">
+    <>
       <CalendarHeader
         weekStart={weekStart}
         onPrev={handlePrev}
@@ -187,6 +188,21 @@ export default function App() {
           onCancel={() => setPrompt(null)}
         />
       )}
+    </>
+  );
+}
+
+export default function App() {
+  const isHelp = /^\/help\/?$/.test(window.location.pathname);
+
+  return (
+    <div className="app">
+      {isHelp ? <HelpPage /> : <Calendar />}
+      <footer className="app-footer">
+        <a className="page-link" href="/help" aria-current={isHelp ? 'page' : undefined}>
+          Help
+        </a>
+      </footer>
     </div>
   );
 }
