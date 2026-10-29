@@ -1,6 +1,6 @@
 import { parseEventTime, HOUR_START, SLOT_HEIGHT } from '../utils/dates';
 
-export default function EventBlock({ event, dayIndex, onClick, columnWidth, offsetIndex, totalOverlaps }) {
+export default function EventBlock({ event, onClick, offsetIndex, totalOverlaps }) {
   const start = parseEventTime(event.start);
   const end = parseEventTime(event.end);
 

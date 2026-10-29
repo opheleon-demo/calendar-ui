@@ -281,3 +281,11 @@ body {
   display: flex;
   flex-direction: column;
 }
+
+.account-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 16px; }
+.login-panel { margin: 64px auto; }
+.login-panel p, .modal p { margin: 12px 0; font-size: 14px; }
+.modal { max-height: 92vh; overflow-y: auto; }
+fieldset { border: 0; padding: 0; min-width: 0; }
+button:disabled { cursor: wait; opacity: .6; }
+[role="alert"] { color: #b91c1c; }
