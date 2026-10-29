@@ -14,7 +14,6 @@ function computeOverlaps(events) {
   const groups = [];
   for (const ev of sorted) {
     const evStart = parseEventTime(ev.start);
-    const evEnd = parseEventTime(ev.end);
     let placed = false;
     for (const group of groups) {
       const lastEnd = parseEventTime(group[group.length - 1].end);
@@ -37,7 +36,7 @@ function computeOverlaps(events) {
 }
 
 export default function WeekGrid({ weekStart, events, onSlotClick, onEventClick, onDrop }) {
-  const days = getWeekDays(weekStart);
+  const days = useMemo(() => getWeekDays(weekStart), [weekStart]);
 
   const eventsByDay = useMemo(() => {
     const map = {};
@@ -50,7 +49,7 @@ export default function WeekGrid({ weekStart, events, onSlotClick, onEventClick,
       });
     });
     return map;
-  }, [events, weekStart]);
+  }, [events, days]);
 
   function handleDragOver(e) {
     e.preventDefault();
@@ -135,7 +134,6 @@ export default function WeekGrid({ weekStart, events, onSlotClick, onEventClick,
                     <EventBlock
                       key={`${ev.id}-${ev.original_date || i}`}
                       event={ev}
-                      dayIndex={dayIdx}
                       onClick={onEventClick}
                       offsetIndex={meta.offset}
                       totalOverlaps={meta.total}
