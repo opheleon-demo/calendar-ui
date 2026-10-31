@@ -3,6 +3,7 @@ import CalendarHeader from './components/CalendarHeader';
 import WeekGrid from './components/WeekGrid';
 import EventModal from './components/EventModal';
 import RecurrencePrompt from './components/RecurrencePrompt';
+import ApiStatusFooter from './components/ApiStatusFooter';
 import { getWeekStart, nextWeek, prevWeek, formatDate, LOCAL_TZ } from './utils/dates';
 import * as api from './api';
 import './App.css';
@@ -171,6 +172,7 @@ export default function App() {
         onEventClick={handleEventClick}
         onDrop={handleDrop}
       />
+      <ApiStatusFooter />
       {(modalEvent || modalSlot) && (
         <EventModal
           event={modalEvent}

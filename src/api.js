@@ -2,6 +2,13 @@ import { LOCAL_TZ } from './utils/dates';
 
 const BASE = 'http://localhost:8000';
 
+export async function fetchHealth(signal) {
+  const res = await fetch(`${BASE}/health`, { signal, cache: 'no-store' });
+  if (res.status !== 200) throw new Error('Health check failed');
+  const body = await res.json();
+  if (body?.status !== 'ok') throw new Error('Unexpected health response');
+}
+
 export async function fetchEvents(start, end, tz = LOCAL_TZ) {
   const res = await fetch(
     `${BASE}/events?start=${start}&end=${end}&tz=${encodeURIComponent(tz)}`
